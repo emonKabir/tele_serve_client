@@ -1,19 +1,45 @@
 import './App.css';
 import { useState } from 'react';
-
+import axios from 'axios';
 function App() {
   const [number, setNumber] = useState('');
   const [otp, setOtp] = useState('');
+  const [phoneHash, setPhoneHash] = useState('');
   const [flag, setFlag] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const handleSubmitNumber = (e) => {
+    console.log('log ');
+    axios
+      .post('http://54.251.15.255:8000/send_otp', {
+        phone: number,
+      })
+      .then(function (response) {
+        console.log(response);
+        setPhoneHash(response.data.phone_hash);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     setFlag(!flag);
     setNumber('');
   };
 
   const handleSubmitOtp = (e) => {
     //// make request here ////
-
+    const url = 'http://54.251.15.255:8000/sign_in';
+    axios
+      .post(url, {
+        phone: number,
+        phone_hash: phoneHash,
+        code: otp,
+      })
+      .then(function (response) {
+        console.log('data ', response.data);
+        //setPhoneHash(response.data.phone_hash)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
     setIsSubmitted(true);
     //setFlag(!flag);
     setOtp('');
