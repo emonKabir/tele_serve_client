@@ -11,3 +11,41 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/* CenteredForm.css */
+
+.centered-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.centered-form {
+  text-align: center;
+}
+
+.centered-form input {
+  padding: 15px;
+  margin: 5px;
+  width: 500px; /* Set the desired width */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.centered-form button {
+  padding: 15px 20px;
+  margin: 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.centered-form button:disabled {
+  background-color: grey;
+  cursor: not-allowed;
+}
