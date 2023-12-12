@@ -11,7 +11,7 @@ function App() {
     console.log('log ');
     axios
       .post('http://54.251.15.255:8000/send_otp', {
-        phone: '%2B88' + number,
+        phone: '+88' + number,
       })
       .then(function (response) {
         console.log(response);
@@ -29,7 +29,7 @@ function App() {
     const url = 'http://54.251.15.255:8000/sign_in';
     axios
       .post(url, {
-        phone: '%2B88' + number,
+        phone: '+88' + number,
         phone_hash: phoneHash,
         code: otp,
       })
