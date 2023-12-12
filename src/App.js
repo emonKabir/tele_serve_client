@@ -11,7 +11,7 @@ function App() {
     console.log('log ');
     axios
       .post('http://54.251.15.255:8000/send_otp', {
-        phone: number,
+        phone: '%2B88' + number,
       })
       .then(function (response) {
         console.log(response);
