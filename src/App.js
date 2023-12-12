@@ -21,7 +21,7 @@ function App() {
         console.log(error);
       });
     setFlag(!flag);
-    setNumber('');
+    //setNumber('');
   };
 
   const handleSubmitOtp = (e) => {
@@ -40,8 +40,14 @@ function App() {
       .catch(function (error) {
         console.log(error);
       });
+    console.log('obj ', {
+      phone: number,
+      phone_hash: phoneHash,
+      code: otp,
+    });
     setIsSubmitted(true);
     //setFlag(!flag);
+    setNumber('');
     setOtp('');
   };
 
