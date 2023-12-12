@@ -29,7 +29,7 @@ function App() {
     const url = 'http://54.251.15.255:8000/sign_in';
     axios
       .post(url, {
-        phone: number,
+        phone: '%2B88' + number,
         phone_hash: phoneHash,
         code: otp,
       })
