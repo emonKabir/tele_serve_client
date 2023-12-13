@@ -7,14 +7,14 @@ function App() {
   const errorMsg = 'Something went wrong. Try again!!';
   const [number, setNumber] = useState('');
   const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
   const [phoneHash, setPhoneHash] = useState('');
-  const [flag, setFlag] = useState(false);
+  const [flag, setFlag] = useState(true);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
+  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const displayToast = (msg = '', type = 'success') => toast[type](msg);
 
   const handleSubmitNumber = (e) => {
-    console.log('log ');
     axios
       .post('http://54.251.15.255:8000/send_otp', {
         phone: '+88' + number,
@@ -41,16 +41,30 @@ function App() {
       phone: '+88' + number,
       phone_hash: phoneHash,
       code: otp,
+      password,
     };
+    !isPasswordRequired && delete obj.password;
     axios
       .post(url, obj)
       .then(function (response) {
         console.log('data ', response.data);
-        setIsSubmitted(true);
-        setNumber('');
-        setOtp('');
-        const msg = 'Successfully Login';
-        displayToast(msg);
+        const data = response.data;
+        if (data.status === 'failed') {
+          displayToast(data.message, 'error');
+          if (
+            data.hasOwnProperty('password_required') &&
+            data['password_required']
+          ) {
+            setIsPasswordRequired(true);
+          }
+        } else {
+          setIsPasswordRequired(false);
+          setIsSubmitted(true);
+          setNumber('');
+          setOtp('');
+          const msg = 'Successfully Login';
+          displayToast(msg);
+        }
       })
       .catch(function (error) {
         console.log(error);
@@ -80,21 +94,46 @@ function App() {
   );
 
   const renderOtp = () => (
-    <>
+    <div
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+    >
       <input
-        disabled={isSubmitted}
+        disabled={isSubmitted || isPasswordRequired}
         value={otp}
         onChange={(e) => setOtp(e.target.value)}
         type="number"
         placeholder="Enter OTP"
       />
-      <button onClick={handleSubmitOtp} disabled={!otp}>
-        Submit
-      </button>
-      <button onClick={handleAnotherNumber} disabled={!isSubmitted}>
-        Add Another Number
-      </button>
-    </>
+      {isPasswordRequired ? (
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="text"
+          placeholder="Password"
+        />
+      ) : (
+        <></>
+      )}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginTop: '10px',
+          width: '100%',
+        }}
+      >
+        <button onClick={handleSubmitOtp} disabled={!otp}>
+          Submit
+        </button>
+        <button
+          onClick={handleAnotherNumber}
+          disabled={!isSubmitted}
+          style={{ marginLeft: '10px' }}
+        >
+          Add Another Number
+        </button>
+      </div>
+    </div>
   );
 
   return (
