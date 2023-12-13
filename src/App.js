@@ -33,7 +33,7 @@ function App() {
 
     //setNumber('');
   };
-  console.log('test git issue');
+
   const handleSubmitOtp = (e) => {
     //// make request here ////
     const url = 'http://54.251.15.255:8000/sign_in';
