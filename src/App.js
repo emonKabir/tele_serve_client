@@ -9,7 +9,7 @@ function App() {
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [phoneHash, setPhoneHash] = useState('');
-  const [flag, setFlag] = useState(true);
+  const [flag, setFlag] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const displayToast = (msg = '', type = 'success') => toast[type](msg);
