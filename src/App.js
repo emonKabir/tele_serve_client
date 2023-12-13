@@ -21,10 +21,15 @@ function App() {
       })
       .then(function (response) {
         console.log(response);
-        setPhoneHash(response.data.phone_hash);
-        setFlag(!flag);
-        const msg = 'Successfully sent otp request';
-        displayToast(msg);
+        const data = response.data;
+        if (data.status === 'failed') {
+          displayToast(data.message, 'error');
+        } else {
+          setPhoneHash(response.data.phone_hash);
+          setFlag(!flag);
+          const msg = 'Successfully sent otp request';
+          displayToast(msg);
+        }
       })
       .catch(function (error) {
         console.log(error);
