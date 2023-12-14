@@ -12,9 +12,28 @@ function App() {
   const [flag, setFlag] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
-  const displayToast = (msg = '', type = 'success') => toast[type](msg);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const toastId = 'loader';
+  const displayToast = (msg = '', type = 'success') => {
+    const options = {
+      pauseOnHover: false,
+      autoClose: 3000,
+      hideProgressBar: true,
+    };
+    toast[type](msg, options);
+  };
+  const loader = (msg = 'loading...') => {
+    toast.loading(msg, {
+      toastId,
+      autoClose: false,
+      position: 'top-center',
+      pauseOnHover: false,
+    });
+  };
+  console.log(isSubmitting);
   const handleSubmitNumber = (e) => {
+    setIsSubmitting(true);
+    loader();
     axios
       .post('http://54.251.15.255:8000/send_otp', {
         phone: '+88' + number,
@@ -33,14 +52,19 @@ function App() {
       })
       .catch(function (error) {
         console.log(error);
+
         displayToast(errorMsg, 'error');
       });
 
+    toast.dismiss(toastId);
+    setIsSubmitting(false);
     //setNumber('');
   };
 
   const handleSubmitOtp = (e) => {
     //// make request here ////
+    setIsSubmitting(true);
+    loader();
     const url = 'http://54.251.15.255:8000/sign_in';
     const obj = {
       phone: '+88' + number,
@@ -76,7 +100,8 @@ function App() {
         displayToast(errorMsg, 'error');
       });
 
-    console.log('obj ', obj);
+    toast.dismiss(toastId);
+    setIsSubmitting(false);
   };
 
   const handleAnotherNumber = () => {
@@ -92,7 +117,7 @@ function App() {
         type="number"
         placeholder="Enter your 11 digits number here. e.g- 019xxxxxxxx"
       />
-      <button onClick={handleSubmitNumber} disabled={!number}>
+      <button onClick={handleSubmitNumber} disabled={!number || isSubmitting}>
         Submit
       </button>
     </>
@@ -127,12 +152,12 @@ function App() {
           width: '100%',
         }}
       >
-        <button onClick={handleSubmitOtp} disabled={!otp}>
+        <button onClick={handleSubmitOtp} disabled={!otp || isSubmitting}>
           Submit
         </button>
         <button
           onClick={handleAnotherNumber}
-          disabled={!isSubmitted}
+          disabled={!isSubmitted || isSubmitting}
           style={{ marginLeft: '10px' }}
         >
           Add Another Number
