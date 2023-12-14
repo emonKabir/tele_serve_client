@@ -30,7 +30,6 @@ function App() {
       pauseOnHover: false,
     });
   };
-  console.log(test);
   const handleSubmitNumber = (e) => {
     loader();
     axios
