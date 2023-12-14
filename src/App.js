@@ -12,7 +12,7 @@ function App() {
   const [flag, setFlag] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  //const [isSubmitting, setIsSubmitting] = useState(false);
   const toastId = 'loader';
   const displayToast = (msg = '', type = 'success') => {
     const options = {
@@ -30,9 +30,8 @@ function App() {
       pauseOnHover: false,
     });
   };
-  console.log(isSubmitting);
+  console.log(test);
   const handleSubmitNumber = (e) => {
-    setIsSubmitting(true);
     loader();
     axios
       .post('http://54.251.15.255:8000/send_otp', {
@@ -55,15 +54,12 @@ function App() {
 
         displayToast(errorMsg, 'error');
       });
-
     toast.dismiss(toastId);
-    setIsSubmitting(false);
-    //setNumber('');
   };
 
   const handleSubmitOtp = (e) => {
     //// make request here ////
-    setIsSubmitting(true);
+    //setIsSubmitting(true);
     loader();
     const url = 'http://54.251.15.255:8000/sign_in';
     const obj = {
@@ -101,7 +97,7 @@ function App() {
       });
 
     toast.dismiss(toastId);
-    setIsSubmitting(false);
+    //setIsSubmitting(false);
   };
 
   const handleAnotherNumber = () => {
@@ -117,7 +113,7 @@ function App() {
         type="number"
         placeholder="Enter your 11 digits number here. e.g- 019xxxxxxxx"
       />
-      <button onClick={handleSubmitNumber} disabled={!number || isSubmitting}>
+      <button onClick={handleSubmitNumber} disabled={!number}>
         Submit
       </button>
     </>
@@ -152,12 +148,12 @@ function App() {
           width: '100%',
         }}
       >
-        <button onClick={handleSubmitOtp} disabled={!otp || isSubmitting}>
+        <button onClick={handleSubmitOtp} disabled={!otp}>
           Submit
         </button>
         <button
           onClick={handleAnotherNumber}
-          disabled={!isSubmitted || isSubmitting}
+          disabled={!isSubmitted}
           style={{ marginLeft: '10px' }}
         >
           Add Another Number
