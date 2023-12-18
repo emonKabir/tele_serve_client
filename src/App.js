@@ -1,5 +1,5 @@
 import './App.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,8 +12,24 @@ function App() {
   const [flag, setFlag] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+  const [counter, setCounter] = useState(0);
   //const [isSubmitting, setIsSubmitting] = useState(false);
   const toastId = 'loader';
+
+  useEffect(() => {
+    if (!flag) {
+      (async () => {
+        const url = 'http://54.251.15.255:8000/dashboard';
+        axios
+          .get(url)
+          .then((resp) => {
+            const counter = resp.data.data.total_count;
+            setCounter(counter);
+          })
+          .catch((err) => console.log(err));
+      })();
+    }
+  }, [flag]);
   const displayToast = (msg = '', type = 'success') => {
     const options = {
       pauseOnHover: false,
@@ -163,6 +179,13 @@ function App() {
 
   return (
     <div className="centered-container">
+      {!flag && (
+        <div className="counter-div">
+          <h3>
+            Total Accounts: <span className="counter">{counter}</span>
+          </h3>
+        </div>
+      )}
       <div className="centered-form">
         {!flag ? renderNumber() : renderOtp()}
       </div>

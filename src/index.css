@@ -12,14 +12,21 @@ code {
     monospace;
 }
 
-
-/* CenteredForm.css */
-
 .centered-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   height: 100vh;
+  flex-direction: column;
+}
+
+.counter-div {
+  display: flex;
+  margin-top: 20px;
+}
+
+.counter {
+  color: #4caf50;
 }
 
 .centered-form {
