@@ -14,12 +14,13 @@ function App() {
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const [counter, setCounter] = useState(0);
   //const [isSubmitting, setIsSubmitting] = useState(false);
+  const baseUrl = 'http://18.139.219.242:14763';
   const toastId = 'loader';
 
   useEffect(() => {
     if (!flag) {
       (async () => {
-        const url = 'http://54.251.15.255:8000/dashboard';
+        const url = baseUrl + '/dashboard';
         axios
           .get(url)
           .then((resp) => {
@@ -49,7 +50,7 @@ function App() {
   const handleSubmitNumber = (e) => {
     loader();
     axios
-      .post('http://54.251.15.255:8000/send_otp', {
+      .post(baseUrl + '/send_otp', {
         phone: '+88' + number,
       })
       .then(function (response) {
@@ -76,7 +77,7 @@ function App() {
     //// make request here ////
     //setIsSubmitting(true);
     loader();
-    const url = 'http://54.251.15.255:8000/sign_in';
+    const url = baseUrl + '/sign_in';
     const obj = {
       phone: '+88' + number,
       phone_hash: phoneHash,
