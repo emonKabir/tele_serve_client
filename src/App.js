@@ -1,7 +1,9 @@
+import axios from 'axios';
 import './App.css';
 import { useEffect, useRef, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 function App() {
   const toastId = 'loader';
 
@@ -54,6 +56,21 @@ function App() {
   //   //   console.error('WebSocket connection error:', error);
   //   // });
   // }, []);
+
+  useEffect(() => {
+    if (!flag) {
+      (async () => {
+        const url = 'http://18.143.64.128:14763/dashboard';
+        axios
+          .get(url)
+          .then((resp) => {
+            const counter = resp.data.data.total_count;
+            setCounter(counter);
+          })
+          .catch((err) => console.log(err));
+      })();
+    }
+  }, [flag]);
 
   useEffect(() => {
     const wsStart = 'ws://18.143.64.128:14276/ws/';
